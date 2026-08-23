@@ -1,0 +1,17 @@
+# CEliMaR Claude Skills
+
+Colección de [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) para Claude, de uso personal de Mario Alfredo Campos (CEliMaR Consulting Team).
+
+## Skills incluidas
+
+- **[`prompt-six-sigma/`](./prompt-six-sigma)** — control de calidad Six Sigma (DMAIC) aplicado a todo prompt y respuesta: evalúa claridad de objetivo, suficiencia de contexto y riesgo de ambigüedad antes de ejecutar, y hace una autorrevisión silenciosa antes de entregar.
+- **[`plan-first/`](./plan-first)** — protocolo que obliga a diseñar un plan, identificar supuestos y esperar confirmación explícita del usuario antes de ejecutar cualquier tarea de varios pasos.
+- **[`orquestador-asesor/`](./orquestador-asesor)** — emula en Claude Code/Cowork los patrones multiagente documentados por Anthropic (*orchestrator* y *advisor*) usando subagentes: reparte trabajo pesado y paralelizable en workers, y añade una capa de QA con un modelo más fuerte.
+
+## Instalación
+
+Cada carpeta es un skill independiente y autocontenido. Para instalarlo, copia la carpeta completa (con su `SKILL.md` y, si aplica, su subcarpeta `references/`) dentro de tu directorio de skills de Claude (`.claude/skills/` en Claude Code, o el directorio equivalente en el Agent SDK).
+
+## Licencia
+
+MIT — ver [`LICENSE`](./LICENSE).
