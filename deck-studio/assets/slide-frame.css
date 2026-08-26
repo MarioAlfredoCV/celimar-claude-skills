@@ -1,0 +1,44 @@
+/* slide-frame.css — Contrato base de lámina para deck-studio.
+   Fija SOLO estructura y zona segura (1600×900). NO impone paleta ni tipografía:
+   cada estilo de `references/02-galeria-estilos.md` trae su propio color y tipo.
+   Cárgalo primero y luego el bloque <style> del estilo elegido. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1600px; height: 900px; }
+
+/* Lienzo fijo: nada se sale de aquí. */
+.slide {
+  position: relative;
+  width: 1600px;
+  height: 900px;
+  overflow: hidden;
+}
+
+/* Zona segura: el contenido primario vive dentro de este margen (≈ 88% central).
+   El fondo (color, imagen, formas) puede ir a sangre; el TEXTO no cruza .safe. */
+.safe {
+  position: absolute;
+  inset: 96px 130px;            /* 96px arriba/abajo · 130px lados */
+}
+
+/* Utilidades de layout (neutras, sin color). */
+.row   { display: flex; }
+.col   { display: flex; flex-direction: column; }
+.grid  { display: grid; gap: 48px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-12 { grid-template-columns: repeat(12, 1fr); }
+.between { justify-content: space-between; }
+.center  { align-items: center; }
+.end     { align-items: flex-end; }
+.fill    { flex: 1; }
+
+/* Marca de agua de número (usar SOLO si la secuencia aporta información). */
+.pageno { position: absolute; bottom: 70px; right: 130px; }
+
+/* Pie/fuente discreto. */
+.footer { position: absolute; bottom: 70px; left: 130px; }
+
+/* Imagen a sangre y sus tratamientos (duotono/overlay se hacen en el estilo). */
+.bleed { position: absolute; inset: 0; width: 1600px; height: 900px; object-fit: cover; }
+.overlay { position: absolute; inset: 0; }

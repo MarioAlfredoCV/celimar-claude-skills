@@ -16,3 +16,8 @@ Cada carpeta es un skill independiente y autocontenido. Para instalarlo, copia l
 ## Licencia
 
 MIT — ver [`LICENSE`](./LICENSE).
+
+## Presentaciones
+
+- **pptx-pro-max/** — sistema de decisión para presentaciones PPTX **editables** de alto impacto (narrativa, diseño, datos, catálogo de plantillas) con validador propio reforzado.
+- **deck-studio/** — presentaciones de **máximo impacto visual** (HTML→imagen→PPTX, no editables) con 8 estilos propios y motor de render autónomo.
