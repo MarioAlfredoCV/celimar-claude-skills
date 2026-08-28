@@ -2,11 +2,30 @@
 
 El motor convierte tus láminas HTML en un `.pptx` de imágenes (y luego PDF). Es autónomo.
 
-## Dependencias (todo libre)
-- **Node.js** + `pptxgenjs` + `playwright`  → `npm install pptxgenjs playwright`
-- Un **Chromium** para Playwright. El motor lo **detecta** en el entorno (ver abajo); si no hay ninguno:
-  `npx playwright install chromium` (descarga ~150 MB, una sola vez).
-- **Python 3** + `img2pdf` (o `Pillow`) para el PDF → `pip install img2pdf` · + `python-pptx` para el QA.
+## Dependencias — cómo se preparan
+
+**El motor solo viene precargado en la nube** (Cowork y Chat): ahí este apartado es solo confirmación, no hay
+nada que instalar. **En Claude Code** (versión desktop y versión CLI, ambas corriendo en la máquina del
+usuario) el motor no viene de fábrica — lo instala el **Paso 0** del `SKILL.md`, corriendo una sola vez:
+```bash
+node scripts/ensure_engine.mjs
+```
+Es idempotente (no reinstala lo que ya está) y deja listas las tres piezas:
+- **Node.js** + `pptxgenjs` + `playwright`, instalados en el **`node_modules` de esta carpeta de la skill** —
+  nunca en la carpeta del deck ni en una raíz de proyecto. `render_deck.mjs` es un script fijo que vive en
+  `scripts/` y resuelve sus imports desde su propia ubicación, así que aunque un uso automatizado (p. ej.
+  n8n → Claude Code CLI headless) tenga `pptxgenjs` preinstalado en una raíz de proyecto para otras skills,
+  deck-studio igual instala y usa el suyo propio.
+- Un **Chromium** para Playwright, cuyo build debe casar con la versión de `playwright` instalada — un
+  desajuste entre ambos le impide lanzarlo. `ensure_engine.mjs` lo instala con `playwright install chromium`
+  (no `npx`) precisamente para no arriesgar una versión distinta a la ya instalada; el motor lo **detecta**
+  en el entorno en cada render (ver abajo).
+- **Python 3** + `img2pdf` + `python-pptx`. Sin `img2pdf`, `export_pdf.py` cae a `Pillow` como respaldo — en
+  **Windows ese respaldo degrada el PDF a 256 colores** (paleta indexada); `img2pdf` es el que da PDF sin
+  pérdida.
+
+Si necesitas instalarlo a mano (poco común — normalmente ya lo resolvió el Paso 0): `npm install pptxgenjs
+playwright` + `playwright install chromium`, y `pip install img2pdf python-pptx`.
 
 ## Flujo de comandos
 ```bash
@@ -45,8 +64,10 @@ export DECK_STUDIO_CHROMIUM=/ruta/a/chrome
 baja a 1 para pruebas rápidas.
 
 ## Solución de problemas
-- **"No se pudo iniciar Chromium"**: instala el navegador (`npx playwright install chromium`) o exporta
-  `DECK_STUDIO_CHROMIUM`. En Linux headless el motor ya pasa `--no-sandbox`.
+- **"No se pudo iniciar Chromium"**: corre `node scripts/ensure_engine.mjs` (lo reinstala si detecta que no
+  arranca) o exporta `DECK_STUDIO_CHROMIUM` apuntando a un binario válido. Si acabas de actualizar `playwright`
+  a mano, el Chromium viejo puede no casar con la nueva versión — deja que `ensure_engine.mjs` lo resuelva. En
+  Linux headless el motor ya pasa `--no-sandbox`.
 - **La fuente no aparece** (se ve Arial): faltó red o el `<link>` es incorrecto; verifica el nombre en Google
   Fonts o incrusta la fuente. Vuelve a renderizar.
 - **Texto cortado / se sale**: el HTML desbordó la zona segura; ajústalo y re-renderiza solo esa lámina.

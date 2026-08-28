@@ -19,10 +19,18 @@ composición y detalle, imposible con gráficos nativos.
   conviene una foto y no hay generador — el deck sale completo igual.
 - **Autónoma y agnóstica de marca.** Para identidad de empresa, se combina con una skill de marca.
 
-## Requisitos (todo libre)
-- **Node** + `pptxgenjs` + `playwright` (`npm install pptxgenjs playwright`) y un **Chromium** (el motor detecta
-  el del entorno; si no hay: `npx playwright install chromium`, ~150 MB una vez).
-- **Python 3** + `img2pdf` (o `Pillow`) para el PDF y `python-pptx` para el QA (`pip install img2pdf python-pptx`).
+## Requisitos y preparación del motor
+El motor viene **precargado en Cowork y en Chat** — ahí no hay nada que instalar. Si usas esta skill en
+**Claude Code** (versión desktop o versión CLI, en tu propia máquina), el motor no viene de fábrica: el
+**Paso 0** del flujo lo prepara solo, corriendo una vez `node scripts/ensure_engine.mjs` (idempotente — no
+reinstala lo que ya está). Deja listas tres piezas, todas libres:
+- **Node** + `pptxgenjs` + `playwright`, instalados en el `node_modules` de **esta misma carpeta** (no en la
+  carpeta del deck ni en la raíz de tu proyecto — `render_deck.mjs` es fijo y resuelve sus imports desde aquí).
+- Un **Chromium** para Playwright — su build debe casar con la versión de `playwright` instalada, o no arranca.
+- **Python 3** + `img2pdf` + `python-pptx` (sin `img2pdf`, el respaldo a `Pillow` degrada el PDF a 256 colores
+  en Windows).
+
+Si algo falla, `references/05-motor-y-render.md` trae la solución de problemas y los comandos manuales.
 
 ## Instalación
 En Claude (Cowork): Customize → Skills → subir el `.skill`. (En Claude Code: carpeta de skills.)
@@ -45,6 +53,7 @@ deck-studio/
 ├── assets/
 │   └── slide-frame.css            # contrato 1600×900 + zona segura + utilidades
 ├── scripts/
+│   ├── ensure_engine.mjs          # prepara el motor solo (Node/Chromium/Python) — Claude Code local
 │   ├── render_deck.mjs            # HTML → PNG (Playwright/Chromium) → PPTX de imágenes
 │   ├── export_pdf.py              # PNG → PDF (img2pdf, lossless; fallback Pillow)
 │   └── check_deck.py              # QA del .pptx de imágenes (python-pptx)

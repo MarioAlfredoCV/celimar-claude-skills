@@ -46,9 +46,16 @@ galería de estilos), y si un eje queda libre, no lo gastes en uno de esos defau
 
 ## El flujo (8 pasos)
 
-### Paso 0 — ¿Es el formato correcto?
+### Paso 0 — ¿Es el formato correcto? + preparar el motor
 Confirma que el usuario acepta un deck **no editable** (imágenes). Si necesita editarlo en PowerPoint, deriva a
 una skill de PPTX editable. Confirma también que produces PPTX de imágenes (PDF al final, si lo acepta).
+
+**Preparación automática del motor (no pidas al usuario que instale nada).** Antes de renderizar (Paso 6),
+corre tú mismo, una sola vez: `node "<ruta-de-esta-skill>/scripts/ensure_engine.mjs"`. Es idempotente y deja
+listas las tres piezas: Node (`playwright` + `pptxgenjs`) en la carpeta de la skill, el navegador Chromium de
+Playwright, y Python (`img2pdf` + `python-pptx`). En Cowork y Chat el motor ya viene y el script solo confirma;
+en Claude Code (versión desktop y versión CLI, ambas en la máquina del usuario) instala lo que falte. No
+interrumpas el flujo para que el usuario lo ejecute.
 
 ### Paso 1 — Contenido y voz  → `references/01-contenido-y-voz.md`
 Fija el argumento **en texto** antes de diseñar: audiencia y propósito, Idea Gobernante, una idea por lámina,
@@ -100,8 +107,18 @@ python3 scripts/export_pdf.py --png <dir_png> --out deck.pdf
 ## Autonomía y dependencias
 
 No depende de ninguna otra skill. Requiere (todo libre): **Node** + `pptxgenjs` + `playwright` (con un
-**Chromium**; el motor detecta el del entorno o instálalo con `npx playwright install chromium`), y **Python** +
-`img2pdf` (o `Pillow`) para el PDF y `python-pptx` para el QA. Detalles en `references/05-motor-y-render.md`.
+**Chromium** cuyo build debe casar con la versión de `playwright` instalada — un desajuste entre ambos le
+impide lanzarlo), y **Python** + `img2pdf` (si falta, `export_pdf.py` cae a `Pillow`, que en Windows degrada
+el PDF a 256 colores) para el PDF, y `python-pptx` para el QA.
+
+**El motor solo viene precargado en la nube** (Cowork y Chat) — ahí este apartado es solo confirmación. En
+**Claude Code** (versión desktop y versión CLI, ambas en la máquina del usuario) no viene instalado: lo
+prepara el **Paso 0**, corriendo `scripts/ensure_engine.mjs` de forma idempotente. Ese motor Node se instala
+siempre en el `node_modules` de **esta carpeta de la skill** — nunca en la carpeta del deck ni en una raíz de
+proyecto — porque `render_deck.mjs` es un script fijo que vive aquí y resuelve sus imports desde su propia
+ubicación; por eso, aunque un uso automatizado (p. ej. n8n → Claude Code CLI headless) tenga `pptxgenjs`
+preinstalado en una raíz de proyecto para otras skills, deck-studio igual usa el suyo propio. Detalles en
+`references/05-motor-y-render.md`.
 
 ## Archivos de referencia
 
