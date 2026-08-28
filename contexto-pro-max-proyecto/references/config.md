@@ -1,4 +1,4 @@
-# Config del proyecto — `mapa-memoria.config.md`
+# Config del proyecto — `contexto-pro-max.config.md`
 
 Vive en la **raíz del proyecto**. La skill lo lee al arrancar. Si no existe, lo crea preguntando lo mínimo.
 
@@ -30,4 +30,4 @@ Pregunta solo lo que falte, en lenguaje llano:
 3. ¿Qué carpetas contienen el conocimiento a memorizar?
 4. ¿Hay alguna carpeta privada o sensible que deba excluir por completo? *(por defecto `ST`)*
 
-Guarda las respuestas en `mapa-memoria.config.md` y confirma el resultado antes de proceder.
+Guarda las respuestas en `contexto-pro-max.config.md` y confirma el resultado antes de proceder.

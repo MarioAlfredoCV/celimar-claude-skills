@@ -1,5 +1,5 @@
 ---
-name: mapa-memoria-proyecto
+name: contexto-pro-max-proyecto
 description: >
   Optimiza la ingeniería de contexto de un proyecto de Claude en Cowork o Claude Code: crea y
   mantiene una memoria de proyecto AUTOSUFICIENTE más un MAPA (índice + sub-índice + grafo
@@ -13,7 +13,7 @@ description: >
 license: MIT
 ---
 
-# mapa-memoria-proyecto
+# contexto-pro-max-proyecto
 
 ## Qué es
 
@@ -40,7 +40,7 @@ que la skill no aplica y detente.
 
 ## Config (parametrización por proyecto)
 
-Lo específico de cada proyecto vive en `mapa-memoria.config.md` en la raíz. Léelo al arrancar; si
+Lo específico de cada proyecto vive en `contexto-pro-max.config.md` en la raíz. Léelo al arrancar; si
 **no existe**, créalo preguntando lo mínimo (esquema y preguntas en `references/config.md`):
 
 - `proyecto`: nombre del proyecto.
