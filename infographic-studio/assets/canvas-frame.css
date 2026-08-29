@@ -1,0 +1,51 @@
+/* canvas-frame.css — Contrato base del lienzo para infographic-studio.
+   Fija SOLO el ancho (1200px) y la zona segura horizontal; el alto es libre — crece con el
+   contenido y el motor lo captura completo (fullPage). NO impone paleta ni tipografía: cada
+   estilo de `references/02-galeria-estilos.md` trae su propio color y tipo. Cárgalo primero
+   y luego el bloque <style> del estilo elegido. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1200px; }
+
+/* Lienzo: ancho fijo, alto libre (crece con el contenido, no lo fijes tú). */
+.canvas {
+  position: relative;
+  width: 1200px;
+}
+
+/* Zona segura horizontal: el contenido primario vive dentro de este margen lateral.
+   El fondo de una sección (color, imagen, formas) puede ir a sangre; el TEXTO no cruza. */
+.safe {
+  padding: 0 84px;
+}
+
+/* Ritmo vertical: cada sección apilada respira con este espacio antes/después. */
+.section {
+  position: relative;
+  width: 100%;
+  padding: 72px 0;
+}
+.section.tight { padding: 40px 0; }
+.section.bleed-bg { padding: 72px 84px; } /* fondo de la sección a sangre; el texto igual respeta 84px */
+
+/* Utilidades de layout (neutras, sin color) — mismo léxico que deck-studio. */
+.row   { display: flex; }
+.col   { display: flex; flex-direction: column; }
+.grid  { display: grid; gap: 40px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.between { justify-content: space-between; }
+.center  { align-items: center; }
+.end     { align-items: flex-end; }
+.fill    { flex: 1; }
+
+/* Pie de fuentes/atribución — casi toda infografía seria lo necesita. */
+.sources {
+  font-size: 14px;
+  opacity: .7;
+  padding: 32px 84px 48px;
+}
+
+/* Imagen a sangre dentro de una sección, y su overlay para legibilidad del texto encima. */
+.bleed { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.overlay { position: absolute; inset: 0; }
