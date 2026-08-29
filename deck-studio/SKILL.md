@@ -120,6 +120,12 @@ ubicación; por eso, aunque un uso automatizado (p. ej. n8n → Claude Code CLI 
 preinstalado en una raíz de proyecto para otras skills, deck-studio igual usa el suyo propio. Detalles en
 `references/05-motor-y-render.md`.
 
+Hay una segunda causa, distinta del desajuste de versión, por la que Chromium puede no lanzar: que falte
+una **biblioteca del sistema** (típicamente de X11) que el sandbox nunca tuvo instalada — confirmado en
+pruebas reales (faltaba `libXdamage.so.1` en el entorno de desarrollo de Cowork). `ensure_engine.mjs` la
+detecta y la repara **sin privilegios de root**, vinculándola de forma local dentro de la propia carpeta
+de la skill; ver `references/05-motor-y-render.md`.
+
 ## Archivos de referencia
 
 - `references/01-contenido-y-voz.md` — argumento en texto, una idea, títulos, texto mínimo (glance media).

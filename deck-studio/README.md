@@ -27,6 +27,11 @@ reinstala lo que ya está). Deja listas tres piezas, todas libres:
 - **Node** + `pptxgenjs` + `playwright`, instalados en el `node_modules` de **esta misma carpeta** (no en la
   carpeta del deck ni en la raíz de tu proyecto — `render_deck.mjs` es fijo y resuelve sus imports desde aquí).
 - Un **Chromium** para Playwright — su build debe casar con la versión de `playwright` instalada, o no arranca.
+
+Probado de verdad: en un sandbox real sin privilegios de root, un Chromium recién descargado (versión ya
+correcta) no lanzaba por faltar una biblioteca de sistema (`libXdamage.so.1`). `ensure_engine.mjs` lo
+repara solo — descarga el paquete `.deb` sin instalarlo (`apt-get download`, que no requiere root) y lo
+vincula localmente en `.local-libs/` dentro de esta carpeta, sin tocar el sistema.
 - **Python 3** + `img2pdf` + `python-pptx` (sin `img2pdf`, el respaldo a `Pillow` degrada el PDF a 256 colores
   en Windows).
 

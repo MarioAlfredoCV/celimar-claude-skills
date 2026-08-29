@@ -27,6 +27,17 @@ Es idempotente (no reinstala lo que ya está) y deja listas las tres piezas:
 Si necesitas instalarlo a mano (poco común — normalmente ya lo resolvió el Paso 0): `npm install pptxgenjs
 playwright` + `playwright install chromium`, y `pip install img2pdf python-pptx`.
 
+**Segunda causa de fallo, confirmada en pruebas reales — bibliotecas de sistema faltantes.** Un Chromium
+recién descargado (versión ya correcta) puede seguir sin lanzar si al sandbox le falta una biblioteca de
+sistema (típicamente de X11) que normalmente se instala con `apt-get install`, y que un entorno sin
+privilegios de root no puede instalar así. `ensure_engine.mjs` la detecta (corre `ldd` sobre el binario de
+Chromium, ve qué falta) y la repara **sin root**: `apt-get download <paquete>` (descarga el `.deb` sin
+instalarlo — esto sí funciona sin privilegios) + `dpkg-deb -x` (lo extrae sin instalarlo) y copia la
+biblioteca a `.local-libs/lib/` dentro de esta misma carpeta; `render_deck.mjs` la agrega a
+`LD_LIBRARY_PATH` al lanzar Chromium. No se toca el sistema en ningún momento. Cubre el conjunto habitual
+de bibliotecas gráficas de Chromium (X11, GTK, Pango, etc.); si aparece una que no reconoce, lo dice
+explícitamente en vez de fallar en silencio.
+
 ## Flujo de comandos
 ```bash
 # 1) Renderiza las láminas HTML → PNG (2×) → PPTX de imágenes
@@ -42,9 +53,12 @@ python3 scripts/export_pdf.py --png deck_png --out deck.pdf
 los PNG en `<out>_png/` (o donde indique `--png`).
 
 ## Detección del navegador
-`render_deck.mjs` prueba, en orden: `DECK_STUDIO_CHROMIUM` (variable de entorno) → `/opt/pw-browsers/chromium`
-(symlink típico en Cowork) → `chromium-*/chrome-linux/chrome` bajo `PLAYWRIGHT_BROWSERS_PATH` → el navegador propio
-de Playwright. Si todo falla, imprime la instrucción de `npx playwright install chromium`. Para forzar uno:
+`render_deck.mjs` usa, en orden: `DECK_STUDIO_CHROMIUM` (variable de entorno, override explícito) → el
+Chromium que Playwright ya resuelve solo (`chromium.executablePath()`) — no se escanean carpetas a mano,
+porque el nombre de la subcarpeta del binario ha cambiado entre versiones de Playwright (p. ej.
+"chrome-linux" vs "chrome-linux64"), y confiar en `executablePath()` evita que ese detalle interno rompa
+la detección. Si el navegador no lanza, imprime la instrucción de correr `node scripts/ensure_engine.mjs`.
+Para forzar un binario concreto:
 ```bash
 export DECK_STUDIO_CHROMIUM=/ruta/a/chrome
 ```
@@ -64,10 +78,13 @@ export DECK_STUDIO_CHROMIUM=/ruta/a/chrome
 baja a 1 para pruebas rápidas.
 
 ## Solución de problemas
-- **"No se pudo iniciar Chromium"**: corre `node scripts/ensure_engine.mjs` (lo reinstala si detecta que no
-  arranca) o exporta `DECK_STUDIO_CHROMIUM` apuntando a un binario válido. Si acabas de actualizar `playwright`
-  a mano, el Chromium viejo puede no casar con la nueva versión — deja que `ensure_engine.mjs` lo resuelva. En
-  Linux headless el motor ya pasa `--no-sandbox`.
+- **"No se pudo iniciar Chromium"**: corre `node scripts/ensure_engine.mjs` — intenta instalar el navegador
+  y, si sigue sin lanzar, repara bibliotecas de sistema faltantes sin root (ver arriba). Si acabas de
+  actualizar `playwright` a mano, el Chromium viejo puede no casar con la nueva versión — deja que
+  `ensure_engine.mjs` lo resuelva. Si aun reparando las bibliotecas sigue sin lanzar, el mensaje final dice
+  exactamente qué falta y sin mapeo conocido; hace falta un administrador con `apt-get install`. Alternativa:
+  exporta `DECK_STUDIO_CHROMIUM` apuntando a un binario ya funcional. En Linux headless el motor ya pasa
+  `--no-sandbox`.
 - **La fuente no aparece** (se ve Arial): faltó red o el `<link>` es incorrecto; verifica el nombre en Google
   Fonts o incrusta la fuente. Vuelve a renderizar.
 - **Texto cortado / se sale**: el HTML desbordó la zona segura; ajústalo y re-renderiza solo esa lámina.
