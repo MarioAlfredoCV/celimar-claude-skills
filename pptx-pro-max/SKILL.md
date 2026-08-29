@@ -52,6 +52,18 @@ detalle y las reglas numéricas. **No saltes al diseño visual antes de haber fi
 Confirma que produces un `.pptx` editable. El motor es `pptxgenjs` y el control de calidad es el validador
 propio `scripts/validate_deck.py` (+ render con LibreOffice/poppler). Ten a mano `references/07-motor-y-render.md`.
 
+**Preparación automática del motor (no pidas al usuario que instale nada).** Antes de construir, decide
+la **carpeta del deck** (donde vivirá y correrá el script `pptxgenjs`): usa la que el usuario indique o,
+si no indica ninguna, el directorio de trabajo actual. Luego corre tú mismo, una sola vez por carpeta:
+`node "<ruta-de-esta-skill>/scripts/ensure_engine.mjs" --dir "<carpeta_del_deck>"`
+Es idempotente y usa la resolución de Node (carpeta + padres): instala `pptxgenjs` en
+`<carpeta_del_deck>/node_modules` solo si no resuelve desde ahí ni desde ninguna carpeta padre; si el motor
+ya está (en la carpeta o en una raíz superior preinstalada), no hace nada. No interrumpas el flujo para que
+el usuario lo ejecute; hazlo como parte de la construcción y sigue. En **Cowork y Chat** el motor ya viene en
+el entorno, así que el script solo confirma y sigue; en **Claude Code (versión desktop y versión CLI, ambas
+en la máquina del usuario)** el motor no está y el script lo instala. Genera y ejecuta el script del deck **en
+esa misma carpeta**, para que Node resuelva `pptxgenjs` desde ahí (o desde un padre).
+
 ### Paso 1 — Diagnóstico  → `references/01-diagnostico-narrativa.md`
 Antes de escribir nada, determina: **audiencia** (quién entra, qué decide), **propósito** (decisión,
 avance, arranque, formación, venta), **canal** (¿se leerá el deck sin el ponente presente, o lo narra en

@@ -7,11 +7,19 @@ aquí para que la skill funcione sin buscar nada fuera.
 
 ## Dependencias (todas libres)
 
-- **Node.js + `pptxgenjs`** para generar el deck. Si `require('pptxgenjs')` falla: `npm install pptxgenjs`.
+- **Node.js + `pptxgenjs`** para generar el deck. **No se instala a mano:** el Paso 0 corre
+  `scripts/ensure_engine.mjs` (idempotente, con resolución de Node hacia la carpeta del deck y sus padres),
+  que instala `pptxgenjs` solo si no resuelve por ningún lado. Como arreglo manual suelto valdría
+  `npm install pptxgenjs` en la carpeta desde donde corre el script.
 - **Python 3 + `python-pptx` + `lxml`** para el validador. Si faltan: `pip install python-pptx lxml`.
 - **LibreOffice** (`soffice`) y **poppler** (`pdftoppm`) para render a imágenes en el QA visual.
 
-En Claude (Cowork, claude.ai, Claude Code) estas piezas ya vienen en el entorno.
+**Dónde vive el motor.** En **Cowork** y en **Chat** (claude.ai) `pptxgenjs` ya viene en el entorno de
+ejecución. En **Claude Code** —tanto la **versión desktop** como la **versión CLI**, que corren en la
+máquina del usuario— el motor **no viene preinstalado**: por eso el Paso 0 lo instala automáticamente en la
+carpeta del deck (o lo hereda de esa misma carpeta o de una raíz superior si ya está preinstalado). No es una
+diferencia entre desktop y CLI (ambas parten sin el motor), sino entre correr en la nube (Cowork/Chat, con
+motor) y correr en la máquina del usuario (Claude Code, sin motor hasta que el Paso 0 lo resuelve).
 
 ## Gotchas de pptxgenjs (evita archivos que PowerPoint rechaza)
 
