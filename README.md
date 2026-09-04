@@ -12,6 +12,7 @@ Colección de [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/ag
 - **[`pptx-pro-max/`](./pptx-pro-max)** — sistema de decisión para presentaciones PowerPoint **editables** de alto impacto: convierte cada pedido en decisiones de narrativa, contenido, diseño visual, datos y plantilla (Minto, assertion-evidence, Mayer, Duarte, Knaflic, Tufte, WCAG), con un catálogo de plantillas de negocio y un **validador propio reforzado**. Autónoma.
 - **[`deck-studio/`](./deck-studio)** — presentaciones de **máximo impacto visual**: renderiza cada lámina como HTML por navegador (Chromium) y la empaqueta como imagen a pantalla completa en un `.pptx` (no editable), con **8 estilos propios**, decisión código-vs-imagen y motor de render autónomo. Exporta a PDF.
 - **[`infographic-studio/`](./infographic-studio)** — infografías de **una sola pieza**: lienzo HTML de ancho fijo y alto variable, renderizado y capturado completo (Chromium, sin recortar) como PNG de alta resolución, con PDF de una página al aceptarse. Reutiliza los 8 estilos propios de `deck-studio`; añade la regla de que todo dato numérico lleva su fuente citada. Autónoma.
+- **[`prezi-ai-bridge/`](./prezi-ai-bridge)** — puente hacia Prezi AI cuando no existe conector real (sin MCP, sin API pública de creación de contenido, sin integración en Zapier/Make/n8n): entrega un único documento con el contenido en limpio y un prompt optimizado — validado con pruebas reales, no solo con la guía oficial de Prezi — listo para pegar en Word y subir.
 
 ## Instalación
 
