@@ -58,3 +58,9 @@ assert not faltan, faltan
 Captura la **sustancia** que haría falta para responder una pregunta probable (decisión, dato,
 estado, razón), **no** solo el nombre del archivo. Para archivos puramente operativos que un
 gemelo en Chat nunca necesita, basta una mención breve en la cola "Dónde vive".
+
+## Windows: fin de línea y herramientas
+
+- `open(ruta, "w")` de Python escribe **CRLF** en Windows y cambia el formato del archivo. Escribe siempre con `newline="\n"` (o en binario) y, al cerrar, verifica `b"\r" not in contenido`. El enrutamiento por `Grep` funciona mejor con LF.
+- **No hay `pandoc`** por defecto: comprueba con `where pandoc`. Para `.docx` usa `python-docx` (párrafos y tablas); `.xlsx` con `openpyxl` (`data_only=True`); `.pdf` con `pdftotext -layout`.
+- Rutas con tildes y espacios: cítalas siempre; en Python usa `os.walk`/`os.listdir` si `ls` falla por normalización.

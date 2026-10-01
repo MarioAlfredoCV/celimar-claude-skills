@@ -1,11 +1,11 @@
-# Formato del MAPA (`MAPA-<proyecto>.md`)
+# Formato del MAPA (`MAPA.md`)
 
 Artefacto **derivado** de la memoria; se **regenera después** de ella. Enruta por **título de
 encabezado** (Grep), nunca por número de línea. Nodo = código de sección (estable ante ediciones).
 
 ## Estructura
 
-    # MAPA-<proyecto> — índice + grafo de relaciones
+    # MAPA — índice + grafo de relaciones
 
     > Capa de arranque para enrutar la lectura de <memoria> sin abrirla entera.
     > Cómo enrutar: (1) ubica en el índice la sección; (2) sigue el grafo 1 salto
