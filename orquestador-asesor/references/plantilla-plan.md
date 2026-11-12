@@ -14,22 +14,30 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
    Hará: planificar, redactar los briefs, delegar, sintetizar.
    [En orquestación pura y combinada] No procesaré el material crudo.
 
-3. Roster de modelos:
-   - Hilo principal (líder/ejecutor) — modelo de la SESIÓN: <recomendado Fable 5 / Sonnet 5>.
-     ⚠️ No puedo cambiarlo yo; correré al modelo que tengas seleccionado ahora. Si no
-     coincide con el recomendado, te sugiero cambiarlo tú (en esta sesión o en otra)
+3. Roster de modelos y esfuerzos (siempre la versión más reciente de cada familia):
+   - Hilo principal (líder/ejecutor) — modelo y esfuerzo de la SESIÓN: recomendado
+     <Fable, esfuerzo predeterminado o medio / Sonnet, esfuerzo máximo>.
+     ⚠️ No puedo cambiarlos yo; correré con lo que tengas seleccionado ahora. Si no
+     coincide con lo recomendado, te sugiero cambiarlo tú (en esta sesión o en otra)
      antes de aprobar. Los subagentes de abajo sí los fijo yo.
-   - Subagentes (los fijo yo): ejecutores <Sonnet 5 / Opus 5> (×N), asesor <Fable 5 / —>
+   - Subagentes (los fijo yo):
+     · Workers de criterio alto: Sonnet · máximo (×N) — <para qué piezas y por qué>
+     · Workers de criterio bajo: Haiku · máximo (×N) — <para qué piezas y por qué>
+     · Extractores-clasificadores: Haiku · medio (×N), cada uno con revisor Sonnet · máximo
+     · Asesor de piezas: Fable · predeterminado o medio
+     [Quita las líneas que no apliquen a la estrategia.]
 
 4. Subagentes y descomposición: <N> workers.
    - Worker 1 → <pieza / sub-tarea>
-   - Worker 2 → <pieza / sub-tarea>
+   - Extractor 1 → <qué extrae/clasifica> → entrega su archivo a Worker <k>
    - ...
 
 5. Briefs (una línea cada uno):
    - Worker k recibe <insumo>, entrega <resultado destilado> bajo <estándar>.
+   - Extractor j recibe <insumo>, guarda <archivo>; me devuelve solo ruta y conteo;
+     yo paso la ruta al worker consumidor sin abrir los datos.
 
-6. QA / asesor: <quién revisa a quién, con qué modelo, en qué momento>.
+6. QA / asesor: <quién revisa a quién, con qué modelo y esfuerzo, en qué momento>.
 
 7. Ronda de revisiones (por adelantado): cuando entregue la v1 y me pidas
    cambios, re-delegaré con esta misma organización; decidiré como líder si
@@ -51,11 +59,14 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
    Hará: planificar, redactar los briefs, delegar las 8 piezas, integrar y
    entregar. No leeré las transcripciones crudas; solo veré lo destilado.
 
-3. Roster de modelos:
-   - Hilo principal (líder) — modelo de la SESIÓN: recomendado Fable 5.
-     ⚠️ No puedo cambiarlo yo; si esta sesión no está en Fable 5, te sugiero cambiarlo
-     (en esta sesión o en otra) antes de aprobar. Los subagentes sí los fijo yo.
-   - Subagentes (los fijo yo): ejecutores Sonnet 5 (×8), asesor Fable 5 (QA por pieza)
+3. Roster de modelos y esfuerzos (versión más reciente de cada familia):
+   - Hilo principal (líder) — modelo de la SESIÓN: recomendado Fable, esfuerzo
+     predeterminado o medio. ⚠️ No puedo cambiarlo yo; si esta sesión no está así,
+     te sugiero cambiarlo (en esta sesión o en otra) antes de aprobar.
+   - Subagentes (los fijo yo): workers Sonnet · máximo (×8), porque resumir una
+     reunión y decidir qué va a la presentación exige criterio; asesor Fable ·
+     predeterminado (QA por pieza). Sin extractores: no hay datos masivos que
+     clasificar.
 
 4. Subagentes y descomposición: 8 workers, uno por transcripción.
    - Worker 1 → transcripción 1 → Word + presentación
@@ -67,7 +78,7 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
      tomadas, dudas), bajo el estándar de formato y fidelidad convenido.
 
 6. QA / asesor: antes de entregarme su parte, cada worker comisiona a un
-   asesor Fable 5 que revisa su borrador (fidelidad a la transcripción,
+   asesor Fable que revisa su borrador (fidelidad a la transcripción,
    formato, coherencia). El worker incorpora y me entrega solo lo destilado;
    el detalle del QA no llega a mi contexto.
 
@@ -78,4 +89,23 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
    avisa, y reviso yo con mayor rigor. Vuelvo a entregarte para tu aprobación.
 ```
 
-Ajusta el roster si la tarea lo pide (por ejemplo, subir el asesor a Opus 5 en piezas de alto riesgo) y **dilo** en el punto 3.
+## Ejemplo rellenado (combinada con extractores: 600 facturas)
+
+```
+3. Roster de modelos y esfuerzos (versión más reciente de cada familia):
+   - Hilo principal (líder) — recomendado Fable, esfuerzo predeterminado o medio.
+   - Subagentes (los fijo yo):
+     · 3 extractores Haiku · medio: cada uno lee 200 facturas y extrae proveedor,
+       fecha, monto y rubro a un CSV; cada uno con su revisor Sonnet · máximo.
+     · 1 worker Sonnet · máximo: arma el informe de gasto por rubro y detecta
+       anomalías (exige criterio).
+     · 1 worker Haiku · máximo: genera la tabla anexa con formato fijo (mecánico).
+     · Asesor Fable · predeterminado: revisa el informe antes de la entrega.
+
+5. Briefs:
+   - Extractor j recibe su lote de 200 facturas, guarda lote_j.csv, me devuelve
+     solo la ruta, el conteo y cuántas quedaron dudosas. No abro los CSV: paso
+     las 3 rutas al worker del informe y al de la tabla anexa.
+```
+
+Ajusta el roster si la tarea lo pide (por ejemplo, pasar un worker de Haiku a Sonnet si la pieza resultó tener más criterio del previsto) y **dilo** en el punto 3.

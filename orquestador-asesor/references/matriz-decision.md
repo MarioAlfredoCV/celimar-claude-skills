@@ -11,7 +11,7 @@ Ayuda para el **Paso 1** de la skill: elegir entre **ninguna**, **solo-asesor**,
 | **Solo-orquestador** | N piezas similares e **independientes**; lectura/procesamiento pesado; barridos de código o datos; cobertura (verificar muchos hechos) | Cada pieza necesita juicio sutil que un ejecutor barato perdería |
 | **Combinada** | Volumen paralelizable **y** cada pieza se beneficia de un QA fuerte antes de consolidar | El volumen es trivial, o el QA no cambia la calidad final |
 
-## Flujo de decisión (cuatro preguntas)
+## Flujo de decisión (cinco preguntas)
 
 1. **¿Hay volumen paralelizable?** ¿Puedo partir la tarea en piezas independientes que no dependen unas de otras (varias transcripciones, archivos, fuentes, módulos)?
    - **No** → sigue en 2 (asesor o ninguna).
@@ -23,6 +23,17 @@ Ayuda para el **Paso 1** de la skill: elegir entre **ninguna**, **solo-asesor**,
    - **Sí** → **combinada**.
    - **No** → **solo-orquestador**.
 4. **Chequeo de "juicio frontera":** ¿la tarea exige análisis sutil del *contenido mismo* (no transformar ni buscar, sino interpretar con finura)? Si es así, un worker barato puede resumir de más lo que importa → considera **ninguna** o sube el modelo del ejecutor y dilo.
+5. **(Con volumen) ¿Hay clasificación o extracción masiva de datos?** Si la hay, sepárala en workers **extractores-clasificadores** (Haiku · medio, con revisor Sonnet · máximo) que entregan su archivo al worker que lo usa, sin pasar por el líder.
+
+## Sonnet o Haiku para cada worker (combinada)
+
+| Pregunta | Sí → | No → |
+|---|---|---|
+| ¿La tarea es solo extraer o clasificar datos? | Extractor: Haiku · medio, con revisor Sonnet · máximo | Sigue abajo |
+| ¿Quien la ejecute tendrá que decidir con criterio propio (interpretar, priorizar, resolver ambigüedades, redactar con juicio)? | Sonnet · máximo | Haiku · máximo |
+| ¿Dudas? | Sonnet · máximo | — |
+
+Ejemplos: redactar un informe a partir de datos → Sonnet. Detectar anomalías → Sonnet. Llenar una plantilla con datos ya revisados → Haiku. Reformatear 50 tablas al mismo estilo → Haiku. Sacar montos y fechas de 600 facturas → extractor.
 
 ## Ejemplos (solicitud → estrategia)
 

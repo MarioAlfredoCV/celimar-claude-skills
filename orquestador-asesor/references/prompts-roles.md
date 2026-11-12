@@ -6,7 +6,8 @@ Adaptadas de los prompts oficiales de Anthropic (worker del cookbook *plan big, 
 
 No delegas a ciegas: tú escribes cada brief y solo tú ves lo destilado.
 
-- Parte la tarea en sub-tareas **enfocadas e independientes** y delega cada una a un worker vía el Agent tool, asignando su `model`.
+- Parte la tarea en sub-tareas **enfocadas e independientes** y delega cada una a un worker vía el Agent tool, asignando su `model` y su `effort` (ver la tabla de defaults en SKILL.md). Para cada worker de criterio decide Sonnet o Haiku según cuánto criterio propio exige la tarea; la extracción y clasificación siempre va al rol de extractor.
+- Cuando un extractor te devuelva su ruta y su conteo, **pasa la ruta al worker consumidor sin abrir el archivo**. No revisas esos datos: los revisó el revisor Sonnet del extractor.
 - Lanza en **paralelo** (varias llamadas en el mismo turno) las sub-tareas que no dependen entre sí.
 - **Espera** a que reporten todas antes de sacar conclusiones o consolidar.
 - Cuando un worker reporte, decide si su entrega resuelve la sub-tarea o si le mandas un seguimiento.
@@ -35,7 +36,53 @@ entonces [pide la revisión del asesor / entrégamela]. Si no lograste completar
 algo, di exactamente qué hiciste y qué queda incierto.
 ```
 
-## Asesor / QA (brief que se le da al revisor más fuerte)
+### Si el worker consume datos de un extractor
+
+Agrega esto a su brief:
+
+```
+Los datos que vas a usar ya fueron extraídos/clasificados y revisados por otro
+subagente. Están en: <ruta del archivo>. Úsalos como insumo. Si encuentras un
+dato que no cuadra con la fuente, no lo corrijas en silencio: anótalo en tu
+entrega destilada como duda, con la fila o el registro concreto.
+```
+
+## Extractor-clasificador (rol fijo · `haiku` · `effort: medium`)
+
+```
+Eres un subagente extractor-clasificador. Tu ÚNICA tarea es extraer y/o
+clasificar datos; no interpretes, no resumas, no redactes conclusiones.
+
+Insumos: <archivos / rutas>.
+Qué extraer o cómo clasificar: <campos, categorías y reglas explícitas, con
+ejemplos de casos dudosos>.
+Formato de salida: <CSV / JSON / tabla, con columnas exactas>. Incluye una
+columna de "sin clasificar" o "dudoso" en vez de adivinar.
+Guarda el resultado en: <ruta>.
+
+Cuando lo hayas guardado, pide la revisión de un subagente revisor
+(model: sonnet, effort: max) con el brief de revisor que te paso abajo,
+corrige lo que señale y vuelve a guardar.
+
+Entrega al líder SOLO: la ruta del archivo, el número de registros, cuántos
+quedaron dudosos o sin clasificar y si el revisor aprobó. Nada del contenido.
+```
+
+## Revisor del extractor (`sonnet` · `effort: max`)
+
+```
+Eres el revisor de calidad de un extractor-clasificador. Revisa el archivo
+<ruta> contra la fuente <ruta de insumos> y contra estas reglas: <reglas de
+extracción/clasificación>.
+
+Haz un muestreo dirigido: los casos marcados como dudosos, los bordes de cada
+categoría y una muestra al azar del resto. Señala errores concretos (registro,
+valor encontrado, valor correcto) y si hay un patrón de error, nómbralo.
+
+Devuelve: "aprobado" o la lista de correcciones, en menos de ~150 palabras.
+```
+
+## Asesor / QA (brief que se le da al revisor más fuerte · `fable` · sin `effort` o `medium`)
 
 El asesor ve el contexto completo del worker y devuelve guía enfocada, no un plan exhaustivo.
 
@@ -67,9 +114,9 @@ Y, ¿qué restricción rompe el empate?"). Reconciliar es más barato que
 comprometerte con la rama equivocada.
 ```
 
-## Verificación del anidamiento (worker que lanza su propio asesor)
+## Verificación del anidamiento (worker que lanza su propio asesor o revisor)
 
 Al inicio de la ejecución, antes de montar todo, corre **una** prueba mínima: pide a un worker de prueba que intente lanzar su propio subagente asesor sobre un fragmento trivial y que reporte si lo logró.
 
-- **Si lo logra** → usa el diseño worker→asesor: cada worker comisiona su propio QA y el detalle queda invisible para ti (el líder solo ve lo destilado).
-- **Si no lo logra** (el entorno bloquea el anidamiento) → degrada: **tú, el líder, comisionas** el pase de asesor como subagente **hermano** que revisa la salida del worker antes de que la aceptes. Se conserva el QA; solo cambia quién lo dispara. Anótalo en el plan si ocurre.
+- **Si lo logra** → usa el diseño worker→asesor y extractor→revisor: cada worker comisiona su propio QA y el detalle queda invisible para ti (el líder solo ve lo destilado).
+- **Si no lo logra** (el entorno bloquea el anidamiento) → degrada: **tú, el líder, comisionas** el pase de revisión como subagente **hermano** que revisa la salida del worker antes de que la aceptes. Para un extractor, le pasas al revisor solo la ruta y recibes su veredicto; no abres los datos. Se conserva el QA; solo cambia quién lo dispara. Anótalo en el plan si ocurre.
