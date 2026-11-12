@@ -60,10 +60,10 @@ Cuando la estrategia sea distinta de "ninguna", el plan que plan-first presenta 
 
 1. **Estrategia elegida y por qué** — una o dos frases ancladas a las señales del Paso 1.
 2. **Agente líder** — normalmente tú (el hilo principal). Qué hará: planificar, redactar los briefs, delegar, sintetizar. En orquestación pura y combinada, el líder **no** procesa el material crudo.
-3. **Roster de modelos** — qué modelo cumple cada rol, según los defaults de más abajo (ajústalos si la tarea lo pide y dilo). Distingue el **hilo principal** (corre al modelo de la sesión; la skill no lo cambia) de los **subagentes** (esos sí los fijas tú). Incluye aquí el **recordatorio de modelo del hilo principal** descrito en "Defaults de modelos".
-4. **Número de subagentes y descomposición** — cuántos workers, y qué pieza/sub-tarea toma cada uno. Recuerda que dividir de más tiene un costo fijo por subagente; busca el punto donde cada brief es sustancial, no atómico.
+3. **Roster de modelos y esfuerzos** — qué modelo y qué nivel de esfuerzo cumple cada rol, según los defaults de más abajo (ajústalos si la tarea lo pide y dilo). Distingue el **hilo principal** (corre al modelo y esfuerzo de la sesión; la skill no los cambia) de los **subagentes** (esos sí los fijas tú). Para cada worker de la combinada, di si va en Sonnet o en Haiku y por qué (criterio de "Elegir el modelo de cada worker"). Incluye aquí el **recordatorio del hilo principal** descrito en "Defaults de modelos".
+4. **Número de subagentes y descomposición** — cuántos workers, y qué pieza/sub-tarea toma cada uno. Si hay clasificación o extracción de datos, sepárala en workers **extractores** (rol fijo) y di a qué worker consumidor entrega cada uno. Recuerda que dividir de más tiene un costo fijo por subagente; busca el punto donde cada brief es sustancial, no atómico.
 5. **Brief destilado por worker** — en una línea cada uno: qué recibe, qué entrega y bajo qué estándar. Los workers devuelven solo su resultado destilado, no todo su historial.
-6. **Esquema de QA / asesor** — quién revisa a quién, con qué modelo y en qué momento (por pieza antes de entregar, o al final).
+6. **Esquema de QA / asesor** — quién revisa a quién, con qué modelo, con qué esfuerzo y en qué momento (por pieza antes de entregar, o al final). Los extractores tienen su propio revisor Sonnet; el asesor Fable revisa a los workers que producen piezas.
 7. **Esquema de la ronda de revisiones** *(obligatorio, va por adelantado)* — explica **desde ya** cómo abordarás los cambios cuando el usuario, tras ver la v1, pida ajustes: que re-delegarás con la misma organización, que tú como líder decides si esas correcciones ameritan reactivar a los asesores o basta con los workers, y que si un asesor falla, el worker te entrega igual su parte destilada y te avisa para que hagas una revisión crítica mayor.
 
 Luego, plan-first hace lo suyo: espera la aprobación del usuario. No ejecutes antes.
@@ -72,7 +72,8 @@ Luego, plan-first hace lo suyo: espera la aprobación del usuario. No ejecutes a
 
 Las plantillas de instrucciones para cada rol están en `references/prompts-roles.md`. Principios:
 
-- **Delega en paralelo.** Lanza los workers independientes en el mismo turno (varias llamadas al Agent tool a la vez) para aprovechar el paralelismo. Asigna el `model` de cada subagente según el roster.
+- **Delega en paralelo.** Lanza los workers independientes en el mismo turno (varias llamadas al Agent tool a la vez) para aprovechar el paralelismo. Asigna a cada subagente su `model` **y su `effort`** según el roster; esta skill pide esos niveles de forma explícita, así que pásalos siempre. No uses el tipo `fork` para estos roles: un fork hereda el modelo y el esfuerzo del hilo principal e ignora los que le pases.
+- **Extracción y clasificación: del extractor al consumidor, sin pasar por el líder.** El worker extractor guarda su resultado en un archivo, su revisor Sonnet lo revisa, el extractor corrige y al líder solo le devuelve la **ruta del archivo y un conteo** (filas, categorías, casos sin clasificar). El líder pasa esa ruta en el brief del worker consumidor **sin abrir el archivo ni revisar su contenido**: la calidad de esos datos ya la cubrió el revisor del extractor, y el consumidor es quien los usa. Así el contexto del líder queda libre del volumen masivo.
 - **Briefs autocontenidos.** El líder no puede ver el prompt interno de un subagente; todo lo que el worker sabe viene del brief. Descríbele la tarea, el estándar de calidad y el formato de entrega completos.
 - **Entrega destilada.** Instruye a cada worker a devolver **solo** el resultado y la evidencia mínima (rutas de archivo, cifras, decisiones), no su historial de razonamiento ni el material crudo que leyó. Ese corte es lo que mantiene limpio el contexto del líder.
 - **Pase de asesor.** Antes de que un worker entregue, comisiona la revisión del asesor (modelo más fuerte) sobre su borrador; el worker incorpora y luego entrega destilado al líder. Ver `references/prompts-roles.md` para cómo debe tratar el consejo (darle peso, pero si la evidencia empírica lo contradice, reconciliar, no cambiar en silencio).
@@ -80,7 +81,7 @@ Las plantillas de instrucciones para cada rol están en `references/prompts-role
 - **Errores de infraestructura.** Si un worker devuelve un error (timeout, límite de tasa) en vez de resultado, re-asigna esa sub-tarea a un worker nuevo; no lo trates como hallazgo.
 - **Espera y sintetiza.** Reúne todas las entregas destiladas antes de consolidar. La síntesis final la hace el líder.
 
-Sobre el **anidamiento** (worker que lanza su propio asesor): puede o no estar habilitado según el entorno. Al inicio de la ejecución, **verifícalo con una prueba mínima**. Si el anidamiento funciona, sigue el diseño worker→asesor (el QA queda invisible para el líder, como en el ejemplo de referencia). Si **no** funciona, degrada con elegancia: el **líder comisiona** el pase de asesor como subagente hermano que revisa la salida del worker antes de aceptarla. La función de QA se conserva; solo cambia quién lo dispara.
+Sobre el **anidamiento** (worker que lanza su propio asesor, o extractor que lanza su propio revisor): puede o no estar habilitado según el entorno. Al inicio de la ejecución, **verifícalo con una prueba mínima**. Si el anidamiento funciona, sigue el diseño worker→asesor y extractor→revisor (el QA queda invisible para el líder, como en el ejemplo de referencia). Si **no** funciona, degrada con elegancia: el **líder comisiona** el pase de revisión como subagente hermano que revisa la salida del worker antes de aceptarla. En el caso del extractor, el líder solo le pasa la ruta al revisor y recibe su veredicto (aprobado o qué se corrigió); tampoco abre los datos. La función de QA se conserva; solo cambia quién la dispara.
 
 ## Paso 4 — Ronda de revisiones
 
@@ -91,23 +92,47 @@ Cuando el usuario, tras ver la v1, pida cambios o mejoras, trátalos con la **mi
 - Si un asesor **falla** con un worker, el worker te entrega igual su parte destilada y te avisa; en esos casos haz **tú** un esfuerzo mayor de revisión crítica antes de consolidar.
 - Vuelve a entregar la versión destilada al usuario para su aprobación. Repite hasta el visto bueno.
 
-## Defaults de modelos por estrategia
+## Defaults de modelos y esfuerzos por estrategia
 
-Un límite técnico primero, porque cambia lo que puedes prometer: **la skill solo fija el modelo de los subagentes que lanza** (workers y asesor), vía el parámetro `model` del Agent tool (`sonnet` / `opus` / `haiku` / `fable`, que mapea a Sonnet 5 / Opus 5 / Haiku / Fable 5; "Fable 5 High" es un nivel de esfuerzo de la API, no seleccionable aquí → `fable`). **El hilo principal —el "líder"/ejecutor que eres tú— corre con el modelo que el usuario ya eligió para la sesión, y la skill NO puede cambiarlo.** Si la sesión está en Haiku, el líder orquesta en Haiku.
+**Siempre la versión más reciente de cada familia.** El parámetro `model` del Agent tool acepta alias de familia (`fable`, `sonnet`, `haiku`, `opus`) y cada alias apunta a la versión más reciente disponible de esa familia. Por eso esta skill nombra familias, no números de versión: cuando salga una versión nueva, el roster la toma sin editar nada. Al presentar el plan puedes nombrar la versión vigente si la conoces (por ejemplo "Sonnet, hoy 5.5"), pero el alias que pasas es el de la familia.
 
-| Estrategia | Hilo principal (modelo de la SESIÓN, no lo fija la skill) | Subagentes (sí los fija la skill) |
+**El esfuerzo se fija por subagente.** El Agent tool tiene un parámetro `effort` (`low`, `medium`, `high`, `xhigh`, `max`). Esta skill pide niveles concretos para cada rol, así que pásalos siempre. Si el entorno rechaza el `effort` para un modelo, lanza el subagente sin él y dilo en una línea.
+
+**Límite técnico:** la skill solo fija modelo y esfuerzo de los **subagentes** que lanza. **El hilo principal —el líder o ejecutor que eres tú— corre con el modelo y el esfuerzo que el usuario eligió para la sesión, y la skill no puede cambiarlos.** Si la sesión está en Haiku, el líder orquesta en Haiku.
+
+| Estrategia | Hilo principal (lo elige el usuario en la sesión) | Subagentes (`model` · `effort` que fija la skill) |
 |---|---|---|
-| **Combinada** | Líder — recomendado Fable 5 | Ejecutores Sonnet 5 (×N) · Asesor Fable 5 |
-| **Solo asesor** | Diseñador/ejecutor — recomendado Sonnet 5 | Asesor Fable 5 |
-| **Solo orquestador** | Líder — recomendado Fable 5 | Ejecutores Opus 5 (×N) |
+| **Combinada** | Líder — recomendado **Fable**, esfuerzo predeterminado o medio | Workers de criterio alto: `sonnet` · `max` · Workers de criterio bajo: `haiku` · `max` · Extractores-clasificadores (rol fijo): `haiku` · `medium` · Revisor de extractores: `sonnet` · `max` · Asesor de piezas: `fable` · sin `effort` (predeterminado) o `medium` |
+| **Solo asesor** | Diseñador/ejecutor — recomendado **Sonnet**, esfuerzo máximo | Asesor: `fable` · sin `effort` (predeterminado) o `medium` |
+| **Solo orquestador** | Líder — recomendado **Fable**, esfuerzo predeterminado o medio | Ejecutores: `sonnet` · `max` (×N). Si hay extracción masiva: extractores `haiku` · `medium` con su revisor `sonnet` · `max` |
 
-**Recordatorio de modelo del hilo principal (obligatorio en el plan).** Siempre que la estrategia recomiende un modelo para el hilo principal (combinada, solo-orquestador y solo-asesor), incluye en el plan una nota como esta, porque el cambio no está en tus manos:
+### Por qué estos niveles
 
-> Nota de modelo: la estrategia sugiere que el hilo líder/ejecutor (yo) corra en **\<recomendado\>**. No puedo cambiar el modelo de esta sesión por mí mismo; me ejecutaré con el que tengas seleccionado ahora \<nómbralo si lo conoces\>. Si no coincide con \<recomendado\>, te recomiendo cambiarlo tú —en esta sesión, o abriendo otra— antes de aprobar, porque el líder al modelo actual puede rendir menos. Los modelos de los subagentes (workers/asesor) sí los fijo yo.
+- **Fable (líder y asesor) en esfuerzo predeterminado o medio.** Fable ya es el modelo más capaz; su trabajo aquí es planificar, juzgar y revisar, y en esos papeles el esfuerzo máximo suma tiempo y costo sin cambiar mucho la calidad.
+- **Sonnet en esfuerzo máximo.** Sonnet es quien ejecuta con criterio; el esfuerzo máximo le da el razonamiento extra que acerca su resultado al de un modelo mayor.
+- **Haiku en esfuerzo máximo** para tareas de poco criterio: rápido y barato, con el razonamiento suficiente para seguir reglas claras sin equivocarse.
+- **Haiku en esfuerzo medio solo para extraer y clasificar.** Son tareas masivas y repetitivas donde el volumen pesa más que el juicio; el revisor Sonnet atrapa los errores que se escapen.
+- **El revisor del extractor es Sonnet, no Fable.** Revisar clasificaciones y extracciones no necesita un modelo frontera; Fable ahí sería un exceso caro.
+- **Solo-orquestador usa Sonnet en máximo, no Opus.** Sin capa de asesor, el ejecutor debe ser sólido; Sonnet en esfuerzo máximo cubre esa necesidad a menor costo.
 
-Si conoces el modelo de la sesión y ya es igual o más fuerte que el recomendado, dilo y ahórrate el nudge (no hay problema que corregir). En "ninguna" no aplica.
+### Elegir el modelo de cada worker (combinada)
 
-Nota deliberada: en solo-orquestador los ejecutores son **Opus 5** (más fuerte), no Sonnet. Sin capa de asesor, se sube la calidad del ejecutor. Ese modo optimiza **calidad y aislamiento de contexto, no ahorro de tokens**; si en un caso el objetivo fuera el ahorro, propón Sonnet como ejecutor y dilo.
+El líder decide, para cada sub-tarea que delega, si la ejecuta Sonnet o Haiku. La pregunta que decide es **cuánto criterio propio necesita quien la ejecute**:
+
+- **Sonnet** (`sonnet` · `max`) — la tarea exige razonamiento: tomar decisiones operativas, interpretar, priorizar, resolver ambigüedades, redactar con juicio o cruzar fuentes que no coinciden. Si un error de criterio cambia el resultado, es Sonnet.
+- **Haiku** (`haiku` · `max`) — la tarea es acotada y casi mecánica: reglas claras, formato definido, poco margen de interpretación (convertir, reformatear, llenar una plantilla con datos ya validados, verificar contra una lista).
+- **Ante la duda, Sonnet.** Un Haiku que se equivoca de criterio cuesta más en revisiones que lo que ahorra.
+- **La clasificación y extracción de datos no pasa por esta elección:** siempre va al rol fijo de **extractor-clasificador** (`haiku` · `medium`), con su revisor Sonnet, y entrega su archivo al worker consumidor (ver Paso 3). El consumidor puede ser Sonnet o Haiku según esta misma regla.
+
+Di en el plan qué modelo lleva cada worker y por qué, en media línea.
+
+### Recordatorio del hilo principal (obligatorio en el plan)
+
+Siempre que la estrategia recomiende un modelo para el hilo principal (combinada, solo-orquestador y solo-asesor), incluye en el plan una nota como esta, porque el cambio no está en tus manos:
+
+> Nota de modelo: la estrategia sugiere que el hilo líder/ejecutor (yo) corra en **\<Fable / Sonnet\>, versión más reciente, con esfuerzo \<predeterminado o medio / máximo\>**. No puedo cambiar el modelo ni el esfuerzo de esta sesión por mí mismo; me ejecutaré con lo que tengas seleccionado ahora \<nómbralo si lo conoces\>. Si no coincide, te recomiendo cambiarlo tú —en esta sesión o abriendo otra— antes de aprobar. Los modelos y esfuerzos de los subagentes sí los fijo yo.
+
+Si conoces el modelo de la sesión y ya coincide con el recomendado, dilo y ahórrate el aviso. En "ninguna" no aplica.
 
 ## Cuándo NO delegar (guardarraíles honestos del cookbook)
 
