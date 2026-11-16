@@ -22,18 +22,23 @@ Ayuda para el **Paso 1** de la skill: elegir entre **ninguna**, **solo-asesor**,
 3. **(Con volumen) ¿Cada pieza se beneficia de un QA fuerte antes de consolidar?**
    - **Sí** → **combinada**.
    - **No** → **solo-orquestador**.
-4. **Chequeo de "juicio frontera":** ¿la tarea exige análisis sutil del *contenido mismo* (no transformar ni buscar, sino interpretar con finura)? Si es así, un worker barato puede resumir de más lo que importa → considera **ninguna** o sube el modelo del ejecutor y dilo.
-5. **(Con volumen) ¿Hay clasificación o extracción masiva de datos?** Si la hay, sepárala en workers **extractores-clasificadores** (Haiku · medio, con revisor Sonnet · máximo) que entregan su archivo al worker que lo usa, sin pasar por el líder.
+4. **Chequeo de "juicio frontera":** ¿la tarea exige análisis sutil del *contenido mismo* (no transformar ni buscar, sino interpretar con finura)? Si es así, un worker barato puede resumir de más lo que importa → considera **ninguna** o **solo-asesor**; el roster es fijo, así que subir el modelo de un worker solo cabe como excepción que el usuario apruebe en el plan.
+5. **(Con volumen) ¿Hay clasificación o extracción masiva de datos?** Si la hay, sepárala en workers **extractores-clasificadores** que entregan su archivo al worker que lo usa, sin pasar por el líder. En la combinada: Haiku · medio, con revisor Sonnet · máximo. En solo-orquestador: Haiku · máximo, sin revisor.
 
-## Sonnet o Haiku para cada worker (combinada)
+## Qué modelo lleva cada subagente (roster fijo)
 
-| Pregunta | Sí → | No → |
-|---|---|---|
-| ¿La tarea es solo extraer o clasificar datos? | Extractor: Haiku · medio, con revisor Sonnet · máximo | Sigue abajo |
-| ¿Quien la ejecute tendrá que decidir con criterio propio (interpretar, priorizar, resolver ambigüedades, redactar con juicio)? | Sonnet · máximo | Haiku · máximo |
-| ¿Dudas? | Sonnet · máximo | — |
+No se clasifica a los workers por nivel de criterio. El modelo lo decide la estrategia y el rol:
 
-Ejemplos: redactar un informe a partir de datos → Sonnet. Detectar anomalías → Sonnet. Llenar una plantilla con datos ya revisados → Haiku. Reformatear 50 tablas al mismo estilo → Haiku. Sacar montos y fechas de 600 facturas → extractor.
+| Rol | Combinada | Solo-orquestador | Solo-asesor |
+|---|---|---|---|
+| Worker / ejecutor | Haiku · máximo (todos) | Sonnet · máximo | — (ejecuta el hilo principal en Sonnet · máximo) |
+| Extractor-clasificador | Haiku · medio | Haiku · máximo | — |
+| Revisor del extractor | Sonnet · máximo | No hay | — |
+| Asesor | Fable · medio (emergencia: Opus · high) | No hay | Fable · medio |
+
+Ejemplos en la combinada: redactar un informe a partir de datos → worker Haiku · máximo con asesor Fable. Llenar una plantilla o reformatear 50 tablas → worker Haiku · máximo. Sacar montos y fechas de 600 facturas → extractor Haiku · medio con revisor Sonnet.
+
+Como en la combinada las piezas con criterio también las ejecuta Haiku, el brief debe ser más explícito (reglas, estándar, ejemplos) y el pase del asesor Fable no se omite.
 
 ## Ejemplos (solicitud → estrategia)
 

@@ -16,16 +16,23 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
 
 3. Roster de modelos y esfuerzos (siempre la versión más reciente de cada familia):
    - Hilo principal (líder/ejecutor) — modelo y esfuerzo de la SESIÓN: recomendado
-     <Fable, esfuerzo predeterminado o medio / Sonnet, esfuerzo máximo>.
+     <Fable, esfuerzo medio / Sonnet, esfuerzo máximo>.
      ⚠️ No puedo cambiarlos yo; correré con lo que tengas seleccionado ahora. Si no
      coincide con lo recomendado, te sugiero cambiarlo tú (en esta sesión o en otra)
      antes de aprobar. Los subagentes de abajo sí los fijo yo.
    - Subagentes (los fijo yo):
-     · Workers de criterio alto: Sonnet · máximo (×N) — <para qué piezas y por qué>
-     · Workers de criterio bajo: Haiku · máximo (×N) — <para qué piezas y por qué>
+     [Combinada]
+     · Workers ejecutores: Haiku · máximo (×N) — <para qué piezas>
      · Extractores-clasificadores: Haiku · medio (×N), cada uno con revisor Sonnet · máximo
-     · Asesor de piezas: Fable · predeterminado o medio
-     [Quita las líneas que no apliquen a la estrategia.]
+     · Asesor de piezas: Fable · medio
+     · Emergencia: si se agota la cuota de Fable, el asesor pasa a Opus · high (lo
+       cambio yo) y te pediré pasar esta sesión a Opus · high (lo cambias tú).
+     [Solo-orquestador]
+     · Ejecutores: Sonnet · máximo (×N) — <para qué piezas>
+     · Extractores-clasificadores: Haiku · máximo (×N), sin revisor
+     [Solo-asesor]
+     · Asesor: Fable · medio
+     [Deja solo el bloque de la estrategia elegida.]
 
 4. Subagentes y descomposición: <N> workers.
    - Worker 1 → <pieza / sub-tarea>
@@ -61,12 +68,12 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
 
 3. Roster de modelos y esfuerzos (versión más reciente de cada familia):
    - Hilo principal (líder) — modelo de la SESIÓN: recomendado Fable, esfuerzo
-     predeterminado o medio. ⚠️ No puedo cambiarlo yo; si esta sesión no está así,
-     te sugiero cambiarlo (en esta sesión o en otra) antes de aprobar.
-   - Subagentes (los fijo yo): workers Sonnet · máximo (×8), porque resumir una
-     reunión y decidir qué va a la presentación exige criterio; asesor Fable ·
-     predeterminado (QA por pieza). Sin extractores: no hay datos masivos que
-     clasificar.
+     medio. ⚠️ No puedo cambiarlo yo; si esta sesión no está así, te sugiero
+     cambiarlo (en esta sesión o en otra) antes de aprobar.
+   - Subagentes (los fijo yo): workers Haiku · máximo (×8); asesor Fable · medio
+     (QA por pieza). Sin extractores: no hay datos masivos que clasificar.
+   - Emergencia: si se agota la cuota de Fable, el asesor pasa a Opus · high (lo
+     cambio yo) y te pediré pasar esta sesión a Opus · high.
 
 4. Subagentes y descomposición: 8 workers, uno por transcripción.
    - Worker 1 → transcripción 1 → Word + presentación
@@ -93,14 +100,15 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
 
 ```
 3. Roster de modelos y esfuerzos (versión más reciente de cada familia):
-   - Hilo principal (líder) — recomendado Fable, esfuerzo predeterminado o medio.
+   - Hilo principal (líder) — recomendado Fable, esfuerzo medio.
    - Subagentes (los fijo yo):
      · 3 extractores Haiku · medio: cada uno lee 200 facturas y extrae proveedor,
        fecha, monto y rubro a un CSV; cada uno con su revisor Sonnet · máximo.
-     · 1 worker Sonnet · máximo: arma el informe de gasto por rubro y detecta
-       anomalías (exige criterio).
-     · 1 worker Haiku · máximo: genera la tabla anexa con formato fijo (mecánico).
-     · Asesor Fable · predeterminado: revisa el informe antes de la entrega.
+     · 1 worker Haiku · máximo: arma el informe de gasto por rubro y detecta
+       anomalías.
+     · 1 worker Haiku · máximo: genera la tabla anexa con formato fijo.
+     · Asesor Fable · medio: revisa el informe y la tabla antes de la entrega.
+     · Emergencia: si se agota la cuota de Fable, asesor Opus · high.
 
 5. Briefs:
    - Extractor j recibe su lote de 200 facturas, guarda lote_j.csv, me devuelve
@@ -108,4 +116,4 @@ Esto es lo que la skill **inyecta** en el plan que plan-first presenta al usuari
      las 3 rutas al worker del informe y al de la tabla anexa.
 ```
 
-Ajusta el roster si la tarea lo pide (por ejemplo, pasar un worker de Haiku a Sonnet si la pieza resultó tener más criterio del previsto) y **dilo** en el punto 3.
+El roster es fijo por estrategia. Si crees que una pieza pide otro modelo o esfuerzo, propónlo como excepción en el punto 3 y espera el visto bueno del usuario; no lo cambies por tu cuenta.

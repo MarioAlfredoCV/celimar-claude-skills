@@ -60,10 +60,10 @@ Cuando la estrategia sea distinta de "ninguna", el plan que plan-first presenta 
 
 1. **Estrategia elegida y por qué** — una o dos frases ancladas a las señales del Paso 1.
 2. **Agente líder** — normalmente tú (el hilo principal). Qué hará: planificar, redactar los briefs, delegar, sintetizar. En orquestación pura y combinada, el líder **no** procesa el material crudo.
-3. **Roster de modelos y esfuerzos** — qué modelo y qué nivel de esfuerzo cumple cada rol, según los defaults de más abajo (ajústalos si la tarea lo pide y dilo). Distingue el **hilo principal** (corre al modelo y esfuerzo de la sesión; la skill no los cambia) de los **subagentes** (esos sí los fijas tú). Para cada worker de la combinada, di si va en Sonnet o en Haiku y por qué (criterio de "Elegir el modelo de cada worker"). Incluye aquí el **recordatorio del hilo principal** descrito en "Defaults de modelos".
+3. **Roster de modelos y esfuerzos** — qué modelo y qué nivel de esfuerzo cumple cada rol, según los defaults de más abajo (ajústalos si la tarea lo pide y dilo). Distingue el **hilo principal** (corre al modelo y esfuerzo de la sesión; la skill no los cambia) de los **subagentes** (esos sí los fijas tú). El roster es fijo por estrategia: no clasifiques a los workers por nivel de criterio. Incluye aquí el **recordatorio del hilo principal** descrito en "Defaults de modelos" y, en la combinada, la **regla de emergencia** (Opus · `high` si se agota la cuota de Fable).
 4. **Número de subagentes y descomposición** — cuántos workers, y qué pieza/sub-tarea toma cada uno. Si hay clasificación o extracción de datos, sepárala en workers **extractores** (rol fijo) y di a qué worker consumidor entrega cada uno. Recuerda que dividir de más tiene un costo fijo por subagente; busca el punto donde cada brief es sustancial, no atómico.
 5. **Brief destilado por worker** — en una línea cada uno: qué recibe, qué entrega y bajo qué estándar. Los workers devuelven solo su resultado destilado, no todo su historial.
-6. **Esquema de QA / asesor** — quién revisa a quién, con qué modelo, con qué esfuerzo y en qué momento (por pieza antes de entregar, o al final). Los extractores tienen su propio revisor Sonnet; el asesor Fable revisa a los workers que producen piezas.
+6. **Esquema de QA / asesor** — quién revisa a quién, con qué modelo, con qué esfuerzo y en qué momento (por pieza antes de entregar, o al final). En la combinada, los extractores tienen su propio revisor Sonnet y el asesor Fable revisa a los workers que producen piezas. En solo-orquestador no hay revisor ni asesor: el líder coordina a ejecutores y extractores según su rol.
 7. **Esquema de la ronda de revisiones** *(obligatorio, va por adelantado)* — explica **desde ya** cómo abordarás los cambios cuando el usuario, tras ver la v1, pida ajustes: que re-delegarás con la misma organización, que tú como líder decides si esas correcciones ameritan reactivar a los asesores o basta con los workers, y que si un asesor falla, el worker te entrega igual su parte destilada y te avisa para que hagas una revisión crítica mayor.
 
 Luego, plan-first hace lo suyo: espera la aprobación del usuario. No ejecutes antes.
@@ -73,15 +73,15 @@ Luego, plan-first hace lo suyo: espera la aprobación del usuario. No ejecutes a
 Las plantillas de instrucciones para cada rol están en `references/prompts-roles.md`. Principios:
 
 - **Delega en paralelo.** Lanza los workers independientes en el mismo turno (varias llamadas al Agent tool a la vez) para aprovechar el paralelismo. Asigna a cada subagente su `model` **y su `effort`** según el roster; esta skill pide esos niveles de forma explícita, así que pásalos siempre. No uses el tipo `fork` para estos roles: un fork hereda el modelo y el esfuerzo del hilo principal e ignora los que le pases.
-- **Extracción y clasificación: del extractor al consumidor, sin pasar por el líder.** El worker extractor guarda su resultado en un archivo, su revisor Sonnet lo revisa, el extractor corrige y al líder solo le devuelve la **ruta del archivo y un conteo** (filas, categorías, casos sin clasificar). El líder pasa esa ruta en el brief del worker consumidor **sin abrir el archivo ni revisar su contenido**: la calidad de esos datos ya la cubrió el revisor del extractor, y el consumidor es quien los usa. Así el contexto del líder queda libre del volumen masivo.
+- **Extracción y clasificación: del extractor al consumidor, sin pasar por el líder.** El worker extractor guarda su resultado en un archivo y al líder solo le devuelve la **ruta del archivo y un conteo** (filas, categorías, casos sin clasificar). En la **combinada**, antes de entregar, su revisor Sonnet revisa el archivo y el extractor corrige. En **solo-orquestador** no hay revisor: el extractor (Haiku · máximo) se autoverifica contra las reglas del brief antes de entregar. En ambos casos el líder pasa esa ruta en el brief del worker consumidor **sin abrir el archivo ni revisar su contenido**: el consumidor es quien usa los datos y quien anota como duda lo que no cuadre. Así el contexto del líder queda libre del volumen masivo.
 - **Briefs autocontenidos.** El líder no puede ver el prompt interno de un subagente; todo lo que el worker sabe viene del brief. Descríbele la tarea, el estándar de calidad y el formato de entrega completos.
 - **Entrega destilada.** Instruye a cada worker a devolver **solo** el resultado y la evidencia mínima (rutas de archivo, cifras, decisiones), no su historial de razonamiento ni el material crudo que leyó. Ese corte es lo que mantiene limpio el contexto del líder.
-- **Pase de asesor.** Antes de que un worker entregue, comisiona la revisión del asesor (modelo más fuerte) sobre su borrador; el worker incorpora y luego entrega destilado al líder. Ver `references/prompts-roles.md` para cómo debe tratar el consejo (darle peso, pero si la evidencia empírica lo contradice, reconciliar, no cambiar en silencio).
+- **Pase de asesor.** Antes de que un worker entregue, comisiona la revisión del asesor (modelo más fuerte; `fable` · `medium`, o `opus` · `high` en emergencia, ver "Emergencia") sobre su borrador; el worker incorpora y luego entrega destilado al líder. Ver `references/prompts-roles.md` para cómo debe tratar el consejo (darle peso, pero si la evidencia empírica lo contradice, reconciliar, no cambiar en silencio).
 - **Antes del QA, haz durable el entregable.** El worker escribe/guarda su archivo antes de pedir la revisión: si algo se corta, persiste el trabajo.
 - **Errores de infraestructura.** Si un worker devuelve un error (timeout, límite de tasa) en vez de resultado, re-asigna esa sub-tarea a un worker nuevo; no lo trates como hallazgo.
 - **Espera y sintetiza.** Reúne todas las entregas destiladas antes de consolidar. La síntesis final la hace el líder.
 
-Sobre el **anidamiento** (worker que lanza su propio asesor, o extractor que lanza su propio revisor): puede o no estar habilitado según el entorno. Al inicio de la ejecución, **verifícalo con una prueba mínima**. Si el anidamiento funciona, sigue el diseño worker→asesor y extractor→revisor (el QA queda invisible para el líder, como en el ejemplo de referencia). Si **no** funciona, degrada con elegancia: el **líder comisiona** el pase de revisión como subagente hermano que revisa la salida del worker antes de aceptarla. En el caso del extractor, el líder solo le pasa la ruta al revisor y recibe su veredicto (aprobado o qué se corrigió); tampoco abre los datos. La función de QA se conserva; solo cambia quién la dispara.
+Sobre el **anidamiento** (worker que lanza su propio asesor, o extractor de la combinada que lanza su propio revisor): puede o no estar habilitado según el entorno. Al inicio de la ejecución, **verifícalo con una prueba mínima**. Si el anidamiento funciona, sigue el diseño worker→asesor y extractor→revisor (el QA queda invisible para el líder, como en el ejemplo de referencia). Si **no** funciona, degrada con elegancia: el **líder comisiona** el pase de revisión como subagente hermano que revisa la salida del worker antes de aceptarla. En el caso del extractor, el líder solo le pasa la ruta al revisor y recibe su veredicto (aprobado o qué se corrigió); tampoco abre los datos. La función de QA se conserva; solo cambia quién la dispara.
 
 ## Paso 4 — Ronda de revisiones
 
@@ -102,35 +102,37 @@ Cuando el usuario, tras ver la v1, pida cambios o mejoras, trátalos con la **mi
 
 | Estrategia | Hilo principal (lo elige el usuario en la sesión) | Subagentes (`model` · `effort` que fija la skill) |
 |---|---|---|
-| **Combinada** | Líder — recomendado **Fable**, esfuerzo predeterminado o medio | Workers de criterio alto: `sonnet` · `max` · Workers de criterio bajo: `haiku` · `max` · Extractores-clasificadores (rol fijo): `haiku` · `medium` · Revisor de extractores: `sonnet` · `max` · Asesor de piezas: `fable` · sin `effort` (predeterminado) o `medium` |
-| **Solo asesor** | Diseñador/ejecutor — recomendado **Sonnet**, esfuerzo máximo | Asesor: `fable` · sin `effort` (predeterminado) o `medium` |
-| **Solo orquestador** | Líder — recomendado **Fable**, esfuerzo predeterminado o medio | Ejecutores: `sonnet` · `max` (×N). Si hay extracción masiva: extractores `haiku` · `medium` con su revisor `sonnet` · `max` |
+| **Combinada** | Líder — siempre **Fable**, esfuerzo medio. Emergencia (cuota de Fable agotada): **Opus** · high | Workers ejecutores (todos, sin clasificar por criterio): `haiku` · `max` · Extractores-clasificadores (rol fijo): `haiku` · `medium` · Revisor de extractores: `sonnet` · `max` · Asesor de piezas: `fable` · `medium`. Emergencia (cuota de Fable agotada): asesor `opus` · `high` |
+| **Solo asesor** | Diseñador/ejecutor — siempre **Sonnet**, esfuerzo máximo | Asesor: `fable` · `medium` |
+| **Solo orquestador** | Líder — siempre **Fable**, esfuerzo medio | Ejecutores: `sonnet` · `max` (×N). Si hay extracción masiva: extractores `haiku` · `max`, **sin revisor**. El líder coordina el trabajo entre ejecutores y extractores según su rol |
+
+El roster es fijo: no lo cambies por tu cuenta. Si crees que una tarea pide otro modelo o esfuerzo, propónlo en el plan como excepción y espera el visto bueno del usuario.
 
 ### Por qué estos niveles
 
-- **Fable (líder y asesor) en esfuerzo predeterminado o medio.** Fable ya es el modelo más capaz; su trabajo aquí es planificar, juzgar y revisar, y en esos papeles el esfuerzo máximo suma tiempo y costo sin cambiar mucho la calidad.
-- **Sonnet en esfuerzo máximo.** Sonnet es quien ejecuta con criterio; el esfuerzo máximo le da el razonamiento extra que acerca su resultado al de un modelo mayor.
-- **Haiku en esfuerzo máximo** para tareas de poco criterio: rápido y barato, con el razonamiento suficiente para seguir reglas claras sin equivocarse.
-- **Haiku en esfuerzo medio solo para extraer y clasificar.** Son tareas masivas y repetitivas donde el volumen pesa más que el juicio; el revisor Sonnet atrapa los errores que se escapen.
-- **El revisor del extractor es Sonnet, no Fable.** Revisar clasificaciones y extracciones no necesita un modelo frontera; Fable ahí sería un exceso caro.
-- **Solo-orquestador usa Sonnet en máximo, no Opus.** Sin capa de asesor, el ejecutor debe ser sólido; Sonnet en esfuerzo máximo cubre esa necesidad a menor costo.
+- **Fable (líder y asesor) en esfuerzo medio.** Fable ya es el modelo más capaz; su trabajo aquí es planificar, juzgar y revisar, y en esos papeles el esfuerzo máximo suma tiempo y costo sin cambiar mucho la calidad.
+- **Sonnet en esfuerzo máximo** como ejecutor del hilo principal (solo-asesor), ejecutor de solo-orquestador y revisor de extractores (combinada). El esfuerzo máximo le da el razonamiento extra que acerca su resultado al de un modelo mayor.
+- **Combinada: todos los workers en Haiku · máximo.** No se distingue entre criterio alto y bajo. La red de calidad es el asesor Fable, que revisa cada pieza antes de que llegue al líder; por eso el brief de cada worker debe ser más explícito (reglas, estándar, ejemplos) y el pase de asesor no se omite.
+- **Combinada: extractores en Haiku · medio con revisor Sonnet · máximo.** Son tareas masivas y repetitivas donde el volumen pesa más que el juicio; el revisor Sonnet atrapa los errores que se escapen. Revisar extracciones no necesita un modelo frontera.
+- **Solo-orquestador: ejecutores Sonnet · máximo y extractores Haiku · máximo sin revisor.** Sin capa de asesor ni de revisor, cada subagente debe ser sólido por sí mismo: el extractor sube a esfuerzo máximo y se autoverifica, y el ejecutor Sonnet que consume sus datos anota como duda lo que no cuadre.
+- **Opus solo en emergencia y nunca por encima de `high`.** Es el relevo de Fable cuando su cuota se agota, no una opción del roster normal.
 
-### Elegir el modelo de cada worker (combinada)
+### Emergencia: cuota de Fable agotada (solo combinada)
 
-El líder decide, para cada sub-tarea que delega, si la ejecuta Sonnet o Haiku. La pregunta que decide es **cuánto criterio propio necesita quien la ejecute**:
+Si durante una combinada se alcanza el límite de uso de Fable, entra **Opus, versión más reciente (alias `opus`), con esfuerzo `high`** — nunca `xhigh` ni `max`:
 
-- **Sonnet** (`sonnet` · `max`) — la tarea exige razonamiento: tomar decisiones operativas, interpretar, priorizar, resolver ambigüedades, redactar con juicio o cruzar fuentes que no coinciden. Si un error de criterio cambia el resultado, es Sonnet.
-- **Haiku** (`haiku` · `max`) — la tarea es acotada y casi mecánica: reglas claras, formato definido, poco margen de interpretación (convertir, reformatear, llenar una plantilla con datos ya validados, verificar contra una lista).
-- **Ante la duda, Sonnet.** Un Haiku que se equivoca de criterio cuesta más en revisiones que lo que ahorra.
-- **La clasificación y extracción de datos no pasa por esta elección:** siempre va al rol fijo de **extractor-clasificador** (`haiku` · `medium`), con su revisor Sonnet, y entrega su archivo al worker consumidor (ver Paso 3). El consumidor puede ser Sonnet o Haiku según esta misma regla.
+- **Asesor (subagente, lo cambias tú).** Si al lanzar el asesor `fable` el entorno devuelve un error de límite de uso o de cuota, relanza ese mismo pase con `model: opus` · `effort: high` y avisa al usuario en una línea. Si el anidamiento está activo y es el worker quien lanza a su asesor, pon esta regla en el brief del worker. Un error transitorio (timeout, límite de tasa momentáneo) **no** es emergencia: reintenta con Fable.
+- **Líder (hilo principal, lo cambia el usuario).** La skill no puede cambiar el modelo de la sesión. Si la sesión deja de poder correr en Fable, pídele al usuario que la pase a **Opus · high** y continúa con la misma organización, sin rehacer el plan.
+- **Vuelta a la normalidad.** Cuando Fable vuelva a estar disponible, los pases de asesor siguientes regresan a `fable` · `medium`. No rehagas los pases que ya hizo Opus.
+- **Dilo en la entrega.** Indica qué piezas revisó Opus en lugar de Fable.
 
-Di en el plan qué modelo lleva cada worker y por qué, en media línea.
+Esta regla aplica solo a la combinada. En solo-asesor y solo-orquestador, si Fable se agota, detente y consulta al usuario.
 
 ### Recordatorio del hilo principal (obligatorio en el plan)
 
 Siempre que la estrategia recomiende un modelo para el hilo principal (combinada, solo-orquestador y solo-asesor), incluye en el plan una nota como esta, porque el cambio no está en tus manos:
 
-> Nota de modelo: la estrategia sugiere que el hilo líder/ejecutor (yo) corra en **\<Fable / Sonnet\>, versión más reciente, con esfuerzo \<predeterminado o medio / máximo\>**. No puedo cambiar el modelo ni el esfuerzo de esta sesión por mí mismo; me ejecutaré con lo que tengas seleccionado ahora \<nómbralo si lo conoces\>. Si no coincide, te recomiendo cambiarlo tú —en esta sesión o abriendo otra— antes de aprobar. Los modelos y esfuerzos de los subagentes sí los fijo yo.
+> Nota de modelo: la estrategia sugiere que el hilo líder/ejecutor (yo) corra en **\<Fable / Sonnet\>, versión más reciente, con esfuerzo \<medio / máximo\>**. No puedo cambiar el modelo ni el esfuerzo de esta sesión por mí mismo; me ejecutaré con lo que tengas seleccionado ahora \<nómbralo si lo conoces\>. Si no coincide, te recomiendo cambiarlo tú —en esta sesión o abriendo otra— antes de aprobar. Los modelos y esfuerzos de los subagentes sí los fijo yo. \[Solo en la combinada\] Si se agota la cuota de Fable, el relevo es Opus con esfuerzo high: el del asesor lo hago yo; el de esta sesión tendrías que hacerlo tú.
 
 Si conoces el modelo de la sesión y ya coincide con el recomendado, dilo y ahórrate el aviso. En "ninguna" no aplica.
 
